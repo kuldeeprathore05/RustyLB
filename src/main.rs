@@ -1,116 +1,77 @@
-use reqwest::blocking::{Client, Response};
-use serde_json::json;
-use std::time::Duration;
-use std::error::Error;
-use std::collections::HashMap;
+use hyper::{Body, Client, Request, Response, Uri};
 use std::sync::{Arc, Mutex};
+use hyper::{server::conn::AddrStream, service::{make_service_fn, service_fn}};
+use std::{convert::Infallible, net::SocketAddr};
 
-struct LoadBalancer {
-    route: String,
+#[derive(Clone)]
+pub struct LoadBalancer {
     servers: Vec<String>,
-    map: Arc<Mutex<HashMap<String, i32>>>,
+    index: Arc<Mutex<usize>>,
 }
 
 impl LoadBalancer {
-    pub fn new(route: String, servers: Vec<String>) -> Self {
-        let mut map = HashMap::new();
-        for s in &servers {
-            map.insert(s.clone(), 0);
-        }
-        LoadBalancer { 
-            route, 
-            servers, 
-            map: Arc::new(Mutex::new(map))
+    pub fn new(servers: Vec<String>) -> Self {
+        Self {
+            servers,
+            index: Arc::new(Mutex::new(0)),
         }
     }
 
-    pub fn req_ayi_hai(&self) -> Result<Response, Box<dyn Error>> {
+    fn next_server(&self) -> String {
+        let mut idx = self.index.lock().unwrap();
+        let server = self.servers[*idx].clone();
+        *idx = (*idx + 1) % self.servers.len();
+        server
+    }
+
+    /// Forward an incoming request to a backend
+    pub async fn forward_request(&self, req: Request<Body>) -> Response<Body> {
+        let target = self.next_server();
+        let uri_string = format!(
+            "{}{}",
+            target,
+            req.uri().path_and_query().map(|pq| pq.as_str()).unwrap_or("")
+        );
+        let uri: Uri = uri_string.parse().unwrap();
+
+        let new_req = Request::builder()
+            .method(req.method())
+            .uri(uri)
+            .body(req.into_body())
+            .unwrap();
+
         let client = Client::new();
-        
-        // Find server with minimum connections
-        let (selected_server, _min_connections) = {
-            let map_guard = self.map.lock().unwrap();
-            let mut server = &self.servers[0];
-            let mut min = map_guard[server];
-            
-            for s in &self.servers {
-                if map_guard[s] < min {
-                    min = map_guard[s];
-                    server = s;
-                }
-            }
-            (server.clone(), min)
-        };
-
-        // Increment active connections
-        {
-            let mut map_guard = self.map.lock().unwrap();
-            *map_guard.get_mut(&selected_server).unwrap() += 1;
+        match client.request(new_req).await {
+            Ok(res) => res,
+            Err(e) => Response::builder()
+                .status(500)
+                .body(Body::from(format!("Backend error: {}", e)))
+                .unwrap(),
         }
-
-        // Make the request
-        let result = client
-            .get(&selected_server)
-            .timeout(Duration::from_secs(30))
-            .send();
-
-        // Decrement active connections (cleanup)
-         std::thread::sleep(Duration::from_secs(30));
-        
-        {
-            let mut map_guard = self.map.lock().unwrap();
-            *map_guard.get_mut(&selected_server).unwrap() -= 1;
-            println!("Decremented connections for {} after 30 seconds: {}", selected_server, map_guard[&selected_server]);
-        }
-        result.map_err(|e| e.into())
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let route = String::from("/");
-    let servers: Vec<String> = vec![
+#[tokio::main]
+async fn main() {
+    let lb = LoadBalancer::new(vec![
         "http://localhost:8001".to_string(),
         "http://localhost:8002".to_string(),
-        "http://localhost:8003".to_string()
-    ];
-    
-    let lb = LoadBalancer::new(route, servers);
-    
-    match lb.req_ayi_hai() {
-        Ok(response) => {
-            println!("Status: {}", response.status());
-            match response.text() {
-                Ok(text) => println!("Response: {}", text),
-                Err(e) => println!("Error reading response text: {}", e),
-            }
+        "http://localhost:8003".to_string(),
+    ]);
+
+    let lb = Arc::new(lb);
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+
+    let make_svc = make_service_fn(move |_conn: &AddrStream| {
+        let lb = lb.clone();
+        async move {
+            Ok::<_, Infallible>(service_fn(move |req| {
+                let lb = lb.clone();
+                async move { Ok::<_, Infallible>(lb.forward_request(req).await) }
+            }))
         }
-        Err(e) => {
-            println!("Request failed: {}", e);
-        }
-    }
-    match lb.req_ayi_hai() {
-        Ok(response) => {
-            println!("Status: {}", response.status());
-            match response.text() {
-                Ok(text) => println!("Response: {}", text),
-                Err(e) => println!("Error reading response text: {}", e),
-            }
-        }
-        Err(e) => {
-            println!("Request failed: {}", e);
-        }
-    }
-    match lb.req_ayi_hai() {
-        Ok(response) => {
-            println!("Status: {}", response.status());
-            match response.text() {
-                Ok(text) => println!("Response: {}", text),
-                Err(e) => println!("Error reading response text: {}", e),
-            }
-        }
-        Err(e) => {
-            println!("Request failed: {}", e);
-        }
-    }
-    Ok(())
+    });
+
+    println!("Load balancer running at http://{}", addr);
+    hyper::Server::bind(&addr).serve(make_svc).await.unwrap();
 }
