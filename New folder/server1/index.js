@@ -3,7 +3,9 @@ const app = express();
 app.use(express.json())
 app.get('/', (req, res) => {
   console.log('Received POST data:', req.body);
-  res.json({ message: 'Server1 request received', data: req.body });
+  setTimeout(() => {
+    res.json({ message: 'Server1 request received', data: req.body });
+}, 10000);
 });
 
 app.listen(8001, () => {
