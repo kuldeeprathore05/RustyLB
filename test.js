@@ -18,6 +18,6 @@ app.get('/', async(req, res) => {
   res.json({ message: result.data.message});
 });
 
-app.listen(8000,"0.0.0.0", () => {
+app.listen(8000 , () => {
   console.log('Server running on http://localhost:8000');
 });
