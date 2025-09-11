@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
+import axios from 'axios';
 import { BackgroundBeams } from './components/ui/background-beams';
 import { 
   Activity, 
@@ -15,7 +16,7 @@ import ServerCard from './components/ServerCard';
 import MetricCard from './components/MetricCard';
 import AddServerModal from './components/AddServerModal';
 import TrafficChart from './components/TrafficChart';
-
+{
 // interface ServerData {
 //   id: string;
 //   name: string;
@@ -26,71 +27,116 @@ import TrafficChart from './components/TrafficChart';
 //   connections: number;
 //   uptime: string;
 // }
-
+}
 function App() {
+  const [servers, setServers] = useState([]);
+  const [algorithm, setAlgorithm] = useState("round-robin");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [algorithm, setAlgorithm] = useState('round-robin');
+
+  // Fetch servers on load
+  useEffect(() => {
+    fetchServers();
+  }, []);
+
+  const fetchServers = async () => {
+   { console.log("HElllo fetchSerer")}
+    const res = await axios.get("http://localhost:8000/servers");
+    // res.data is a stats object keyed by server URL
+    const serverList = Object.entries(res.data).map(([url, stats]) => ({
+      id: url,
+      name: url, // you can format
+      ip: url,
+      port: "",
+      status: stats.healthy ? "healthy" : "error",
+      responseTime: stats.avgResponseTime,
+      connections: stats.connections,
+      uptime: "N/A"
+    }));
+    setServers(serverList);
+  };
+
+  const handleAddServer = async (serverData) => {
+    console.log("HElllo addServer")
+    await axios.post("http://localhost:8000/servers", {
+      url: `http://${serverData.ip}:${serverData.port}`,
+      weight: 1
+    });
+    fetchServers();
+  };
+
+  const handleRemoveServer = async (id) => {
+    console.log("HElllo addServer")
+    await axios.delete(`http://localhost:8000/servers/${encodeURIComponent(id)}`);
+    fetchServers();
+  };
+
+  const handleAlgorithmChange = async (alg) => {
+    setAlgorithm(alg);
+    await axios.post("http://localhost:8000/algorithm", { algorithm: alg });
+  };
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [algorithm, setAlgorithm] = useState('round-robin');
   
-  const [servers, setServers] = useState([
-    {
-      id: '1',
-      name: 'Web Server 1',
-      ip: '192.168.1.10',
-      port: 80,
-      status: 'healthy',
-      responseTime: 45,
-      connections: 156,
-      uptime: '99.9%'
-    },
-    {
-      id: '2',
-      name: 'Web Server 2',
-      ip: '192.168.1.11',
-      port: 80,
-      status: 'healthy',
-      responseTime: 52,
-      connections: 142,
-      uptime: '99.8%'
-    },
-    {
-      id: '3',
-      name: 'API Server',
-      ip: '192.168.1.20',
-      port: 8080,
-      status: 'warning',
-      responseTime: 180,
-      connections: 89,
-      uptime: '97.2%'
-    },
-    {
-      id: '4',
-      name: 'Database Proxy',
-      ip: '192.168.1.30',
-      port: 3306,
-      status: 'error',
-      responseTime: 0,
-      connections: 0,
-      uptime: '0%'
-    }
-  ]);
+  // const [servers, setServers] = useState([
+  //   {
+  //     id: '1',
+  //     name: 'Web Server 1',
+  //     ip: '192.168.1.10',
+  //     port: 80,
+  //     status: 'healthy',
+  //     responseTime: 45,
+  //     connections: 156,
+  //     uptime: '99.9%'
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Web Server 2',
+  //     ip: '192.168.1.11',
+  //     port: 80,
+  //     status: 'healthy',
+  //     responseTime: 52,
+  //     connections: 142,
+  //     uptime: '99.8%'
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'API Server',
+  //     ip: '192.168.1.20',
+  //     port: 8080,
+  //     status: 'warning',
+  //     responseTime: 180,
+  //     connections: 89,
+  //     uptime: '97.2%'
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Database Proxy',
+  //     ip: '192.168.1.30',
+  //     port: 3306,
+  //     status: 'error',
+  //     responseTime: 0,
+  //     connections: 0,
+  //     uptime: '0%'
+  //   }
+  // ]);
 
-  const handleAddServer = (serverData ) => {
-    const newServer = {
-      id: Date.now().toString(),
-      name: serverData.name,
-      ip: serverData.ip,
-      port: serverData.port,
-      status: 'healthy',
-      responseTime: Math.floor(Math.random() * 100) + 20,
-      connections: Math.floor(Math.random() * 200) + 50,
-      uptime: '100%'
-    };
-    setServers([...servers, newServer]);
-  };
+  // const handleAddServer = (serverData ) => {
+  //   const newServer = {
+  //     id: Date.now().toString(),
+  //     name: serverData.name,
+  //     ip: serverData.ip,
+  //     port: serverData.port,
+  //     status: 'healthy',
+  //     responseTime: Math.floor(Math.random() * 100) + 20,
+  //     connections: Math.floor(Math.random() * 200) + 50,
+  //     uptime: '100%'
+  //   };
+  //   setServers([...servers, newServer]);
+  // };
 
-  const handleRemoveServer = (id) => {
-    setServers(servers.filter(server => server.id !== id));
-  };
+  // const handleRemoveServer = (id) => {
+  //   setServers(servers.filter(server => server.id !== id));
+  // };
 
   const healthyServers = servers.filter(s => s.status === 'healthy').length;
   const totalConnections = servers.reduce((sum, s) => sum + s.connections, 0);
@@ -183,7 +229,7 @@ function App() {
                 </label>
                 <select 
                   value={algorithm}
-                  onChange={(e) => setAlgorithm(e.target.value)}
+                  onChange={(e) => handleAlgorithmChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="round-robin">Round Robin</option>
