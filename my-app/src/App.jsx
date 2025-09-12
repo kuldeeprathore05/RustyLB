@@ -180,7 +180,7 @@ function App() {
           <MetricCard
             title="Active Servers"
             value={`${healthyServers}/${servers.length}`}
-            change={healthyServers === servers.length ? "+100%" : "-25%"}
+            change={healthyServers === servers.length ? `100%`:`${(100*healthyServers/servers.length).toFixed(2)}%`}
             changeType={healthyServers === servers.length ? "positive" : "negative"}
             icon={Server}
             iconColor="bg-blue-600"
@@ -189,7 +189,6 @@ function App() {
           <MetricCard
             title="Total Connections"
             value={totalConnections.toString()}
-            change="+12%"
             changeType="positive"
             icon={Users}
             iconColor="bg-green-600"
@@ -198,7 +197,6 @@ function App() {
           <MetricCard
             title="Avg Response Time"
             value={`${avgResponseTime}ms`}
-            change="-8%"
             changeType="positive"
             icon={Activity}
             iconColor="bg-purple-600"
@@ -206,8 +204,7 @@ function App() {
           
           <MetricCard
             title="Requests/min"
-            value="1,247"
-            change="+15%"
+            value="1,233"
             changeType="positive"
             icon={BarChart3}
             iconColor="bg-orange-600"
@@ -257,7 +254,7 @@ function App() {
           </div>
 
           {/* SSL/Security Status */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          {/* <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-4">
               <Shield className="w-5 h-5 text-green-600" />
               <h3 className="text-lg font-semibold text-gray-900">Security</h3>
@@ -290,10 +287,10 @@ function App() {
                 <div className="text-sm font-medium text-gray-900">March 15, 2025</div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Domain Configuration */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          {/* <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-4">
               <Globe className="w-5 h-5 text-blue-600" />
               <h3 className="text-lg font-semibold text-gray-900">Domains</h3>
@@ -314,15 +311,7 @@ function App() {
                 + Add Domain
               </button>
             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Traffic Chart */}
-          <div className="lg:col-span-1">
-            <TrafficChart />
-          </div>
-
+          </div> */}
           {/* Server Management */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
@@ -352,7 +341,14 @@ function App() {
               </div>
             </div>
           </div>
-        </div>
+        </div> 
+
+        {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> */}
+          {/* Traffic Chart */}
+          {/* <div className="lg:col-span-1">
+            <TrafficChart />
+          </div>  
+        </div> */}
       </div>
 
       <AddServerModal
