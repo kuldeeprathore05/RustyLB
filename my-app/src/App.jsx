@@ -17,18 +17,7 @@ import MetricCard from './components/MetricCard';
 import AddServerModal from './components/AddServerModal';
 import TrafficChart from './components/TrafficChart';
 import { io } from "socket.io-client";
-{
-// interface ServerData {
-//   id: string;
-//   name: string;
-//   ip: string;
-//   port: number;
-//   status: 'healthy' | 'warning' | 'error';
-//   responseTime: number;
-//   connections: number;
-//   uptime: string;
-// }
-}
+
 function App() {
   const [servers, setServers] = useState([]);
   const [algorithm, setAlgorithm] = useState("round-robin");
