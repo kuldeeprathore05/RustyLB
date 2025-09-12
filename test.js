@@ -1,6 +1,8 @@
 const LoadBalancer = require("./index.js");
 const cors  = require('cors');
 const express = require('express')
+const http = require("http");
+const { Server } = require("socket.io");
 const lb = new LoadBalancer({
   servers: [
     "http://localhost:8001",
@@ -16,12 +18,16 @@ const lb = new LoadBalancer({
 });
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server,{
+  cors:{
+    origin: 'http://localhost:5173',   
+    methods: ['GET', 'POST', 'DELETE', 'PUT'],
+  }
+})
 app.use(express.json())
-app.use(cors({
-  origin: 'http://localhost:5173',  // or 3000 if CRA
-  methods: ['GET', 'POST', 'DELETE', 'PUT'],
-  allowedHeaders: ['Content-Type']
-}));
+app.use(cors());
+
 app.get('/', async(req, res) => {
   console.log("Response:");
   try {
@@ -54,6 +60,8 @@ app.post("/servers", (req, res) => {
   lb.serverResponseTimes.set(url, 0);
   lb.serverHealthy.set(url, true);
 
+  broadcastUpdate();
+
   res.json({ message: "Server added", stats: lb.getServerStats() });
 });
 
@@ -67,6 +75,8 @@ app.delete("/servers/:encodedUrl", (req, res) => {
   lb.serverResponseTimes.delete(url);
   lb.serverHealthy.delete(url);
 
+  broadcastUpdate();
+
   res.json({ message: "Server removed", stats: lb.getServerStats() });
 });
 
@@ -78,6 +88,24 @@ app.post("/algorithm", (req, res) => {
   res.json({ message: "Algorithm updated", algorithm });
 });
 
-app.listen(8000, () => {
+io.on("connection",(socket)=>{
+  console.log("Client connected ",socket.id);
+
+  socket.emit("stats",lb.getServerStats());
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+})
+
+function broadcastUpdate() {
+  io.emit("stats", lb.getServerStats());
+}
+
+setInterval(() => {
+  broadcastUpdate();
+}, 1000);
+
+server.listen(8000, () => {
   console.log("Server running on http://localhost:8000");
 });

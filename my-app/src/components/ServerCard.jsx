@@ -1,5 +1,5 @@
 import React from 'react';
-import { Server, Activity, AlertCircle, CheckCircle, Clock, Trash2 } from 'lucide-react';
+import { Server, Activity, AlertCircle, CheckCircle,   Trash2, Weight } from 'lucide-react';
 
 // interface ServerCardProps {
 //   id: string;
@@ -21,7 +21,7 @@ const ServerCard  = ({
   status,
   responseTime,
   connections,
-  uptime,
+  weight,
   onRemove,
 }) => {
   const getStatusIcon = () => {
@@ -86,10 +86,10 @@ const ServerCard  = ({
         
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Clock className="w-4 h-4 text-green-500" />
+            <Weight className="w-4 h-4 text-slate-500" />
           </div>
-          <p className="font-medium text-gray-900">{uptime}</p>
-          <p className="text-gray-500">Uptime</p>
+          <p className="font-medium text-gray-900">{weight}</p>
+          <p className="text-gray-500">Weight</p>
         </div>
       </div>
     </div>
@@ -97,3 +97,4 @@ const ServerCard  = ({
 };
 
 export default ServerCard;
+

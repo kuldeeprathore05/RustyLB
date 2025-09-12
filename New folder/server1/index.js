@@ -5,7 +5,7 @@ app.get('/', (req, res) => {
   console.log('Received POST data:', req.body);
   setTimeout(() => {
     res.json({ message: 'Server1 request received', data: req.body });
-}, 10000);
+}, (Math.random()*10)*1000);
 });
 
 app.listen(8001, () => {

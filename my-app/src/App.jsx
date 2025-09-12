@@ -16,6 +16,7 @@ import ServerCard from './components/ServerCard';
 import MetricCard from './components/MetricCard';
 import AddServerModal from './components/AddServerModal';
 import TrafficChart from './components/TrafficChart';
+import { io } from "socket.io-client";
 {
 // interface ServerData {
 //   id: string;
@@ -35,22 +36,50 @@ function App() {
 
   // Fetch servers on load
   useEffect(() => {
-    fetchServers();
+    const socket = io("http://localhost:8000");
+  
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO:", socket.id);
+    });
+  
+    socket.on("stats", (stats) => {
+      const serverList = Object.entries(stats).map(([url, s]) => ({
+        id: url,
+        name: url,
+        ip: url,
+        port: "",
+        status: s.healthy ? "healthy" : "error",
+        responseTime: s.avgResponseTime,
+        connections: s.connections,
+        weight:s.weight,
+      }));
+      setServers(serverList);
+    });
+  
+    socket.on("algorithm", (alg) => {
+      setAlgorithm(alg);
+    });
+  
+    socket.on("disconnect", () => {
+      console.log("Disconnected from server");
+    });
+  
+    return () => socket.disconnect();
   }, []);
 
   const fetchServers = async () => {
    { console.log("HElllo fetchSerer")}
     const res = await axios.get("http://localhost:8000/servers");
-    // res.data is a stats object keyed by server URL
+
     const serverList = Object.entries(res.data).map(([url, stats]) => ({
       id: url,
-      name: url, // you can format
+      name: url, 
       ip: url,
       port: "",
       status: stats.healthy ? "healthy" : "error",
       responseTime: stats.avgResponseTime,
       connections: stats.connections,
-      uptime: "N/A"
+      weight:stats.weight, 
     }));
     setServers(serverList);
   };
