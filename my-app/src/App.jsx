@@ -162,7 +162,6 @@ function App() {
     servers.filter(s => s.responseTime > 0).reduce((sum, s) => sum + s.responseTime, 0) / 
     servers.filter(s => s.responseTime > 0).length
   );
-
   return (
     <div className="min-h-screen min-w-screen mx-auto ">
       {/* Header */}
