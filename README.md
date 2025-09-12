@@ -29,7 +29,7 @@ Includes a **developer dashboard** to visualize server pool statistics in real-t
   - Recovery mechanism to reset server health.
 
 ---
-## 🖼️ Dashboard Preview
+##  Dashboard Preview
 
 Below is an example dashboard (replace with your actual screenshot):
 
