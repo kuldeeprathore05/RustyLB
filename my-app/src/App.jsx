@@ -18,6 +18,7 @@ import AddServerModal from './components/AddServerModal';
 import TrafficChart from './components/TrafficChart';
 import { io } from "socket.io-client";
 
+
 function App() {
   const [servers, setServers] = useState([]);
   const [algorithm, setAlgorithm] = useState("round-robin");
