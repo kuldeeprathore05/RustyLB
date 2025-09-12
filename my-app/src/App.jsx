@@ -42,6 +42,7 @@ function App() {
         responseTime: s.avgResponseTime,
         connections: s.connections,
         weight:s.weight,
+        requestsPerMinute: s.requestsPerMinute || 0,
       }));
       setServers(serverList);
     });
@@ -69,7 +70,8 @@ function App() {
       status: stats.healthy ? "healthy" : "error",
       responseTime: stats.avgResponseTime,
       connections: stats.connections,
-      weight:stats.weight, 
+      weight:stats.weight,
+      requestsPerMinute: stats.requestsPerMinute,
     }));
     setServers(serverList);
   };
@@ -163,6 +165,7 @@ function App() {
     servers.filter(s => s.responseTime > 0).reduce((sum, s) => sum + s.responseTime, 0) / 
     servers.filter(s => s.responseTime > 0).length
   );
+  const requestperminute = servers.reduce((sum, s)=> sum + (s.requestsPerMinute || 0), 0);
   return (
     <div className="min-h-screen min-w-screen mx-auto ">
       {/* Header */}
@@ -184,9 +187,6 @@ function App() {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 Online
               </div>
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ function App() {
           
           <MetricCard
             title="Requests/min"
-            value="1,233"
+            value={requestperminute}
             changeType="positive"
             icon={BarChart3}
             iconColor="bg-orange-600"

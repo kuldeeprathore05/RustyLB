@@ -11,13 +11,14 @@ class LoadBalancer {
     this.serverWeights = new Map(); // Track weights for weighted round-robin
     this.serverResponseTimes = new Map(); // Track response times for fastest response
     this.serverHealthy = new Map(); // Track server health status
-   
+    this.serverRequestLogs = new Map();
     // Initialize connection counts and health status
     this.servers.forEach(server => {
       this.serverConnections.set(server, 0);
       this.serverWeights.set(server, options.weights?.[server] || 1); // Default weight is 1
       this.serverResponseTimes.set(server, 0);
       this.serverHealthy.set(server, true);
+      this.serverRequestLogs.set(server, []);
     });
 
     // For weighted round-robin
@@ -125,7 +126,9 @@ class LoadBalancer {
    
     // Increment connection count
     this.serverConnections.set(server, this.serverConnections.get(server) + 1);
-    
+    const now = Date.now();
+    this.serverRequestLogs.get(server).push(now);
+
     this.servers.forEach(srv => {
       console.log(srv, " : ", this.serverConnections.get(srv));
     });
@@ -186,13 +189,21 @@ class LoadBalancer {
 
   // Utility method to get server statistics
   getServerStats() {
-    const stats = {};
+     const stats = {};
+      const now = Date.now();
     this.servers.forEach(server => {
+       let logs = this.serverRequestLogs.get(server) || [];
+    logs = logs.filter(ts => now - ts <= 60 * 1000);
+
+    // update the map with cleaned logs
+    this.serverRequestLogs.set(server, logs);
+
       stats[server] = {
         connections: this.serverConnections.get(server),
         weight: this.serverWeights.get(server),
         avgResponseTime: Math.round(this.serverResponseTimes.get(server) || 0),
-        healthy: this.serverHealthy.get(server)
+        healthy: this.serverHealthy.get(server),
+       requestsPerMinute: logs.length
       };
     });
     return stats;
