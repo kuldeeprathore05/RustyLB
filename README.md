@@ -36,3 +36,19 @@ Below is an example dashboard (replace with your actual screenshot):
 ![Dashboard Screenshot](./image.png)
 
 ---
+
+The React frontend (BalancerBoard) is deployed as a **static site**:
+
+- [RustyLB Frontend](https://rustylb-1-nteq.onrender.com/)
+
+The frontend connects to the LoadBalancer backend via WebSockets and REST API.
+
+The LoadBalancer backend handles routing requests to multiple servers using various load balancing algorithms:
+
+- [RustyLB LoadBalancer](https://rustylb-vz2m.onrender.com)
+
+The LoadBalancer distributes requests to the following servers:
+
+1. [Server 1](https://rustylb.onrender.com)
+2. [Server 2](https://rustylb-2.onrender.com)
+3. [Server 3](https://rustylb-3.onrender.com)
