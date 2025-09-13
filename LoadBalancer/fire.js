@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Configuration
-const URL = 'http://localhost:8000';  // Change to 8000 if needed
+const URL = 'https://rustylb-vz2m.onrender.com';  // Change to 8000 if needed
 const TOTAL_REQUESTS = 100;           // Total number of requests
 const CONCURRENT_REQUESTS = 10;       // How many at the same time
 
