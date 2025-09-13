@@ -16,6 +16,7 @@ import { io } from "socket.io-client";
 
 
 function App() {
+  let LoadBalancer = "https://rustylb-vz2m.onrender.com";
   const [servers, setServers] = useState([]);
   const [algorithm, setAlgorithm] = useState("round-robin");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,7 +24,7 @@ function App() {
 
   // Fetch servers on load
   useEffect(() => {
-    const socket = io("http://localhost:8000");
+    const socket = io(`${LoadBalancer}`);
   
     socket.on("connect", () => {
       console.log("Connected to Socket.IO:", socket.id);
@@ -59,7 +60,7 @@ function App() {
 
   const fetchServers = async () => {
    { console.log("HElllo fetchSerer")}
-    const res = await axios.get("http://localhost:8000/servers");
+    const res = await axios.get(`${LoadBalancer}/servers`);
 
     const serverList = Object.entries(res.data).map(([url, stats]) => ({
       id: url,
@@ -77,7 +78,7 @@ function App() {
 
   const handleAddServer = async (serverData) => {
     console.log("HElllo addServer")
-    await axios.post("http://localhost:8000/servers", {
+    await axios.post(`${LoadBalancer}/servers`, {
       url: `http://${serverData.ip}:${serverData.port}`,
       weight: 1
     });
@@ -86,13 +87,13 @@ function App() {
 
   const handleRemoveServer = async (id) => {
     console.log("HElllo addServer")
-    await axios.delete(`http://localhost:8000/servers/${encodeURIComponent(id)}`);
+    await axios.delete(`${LoadBalancer}/servers/${encodeURIComponent(id)}`);
     fetchServers();
   };
 
   const handleAlgorithmChange = async (alg) => {
     setAlgorithm(alg);
-    await axios.post("http://localhost:8000/algorithm", { algorithm: alg });
+    await axios.post(`${LoadBalancer}/algorithm`, { algorithm: alg });
   };
    
 
