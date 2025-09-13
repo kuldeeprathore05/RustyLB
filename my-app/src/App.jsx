@@ -1,21 +1,17 @@
 import React, { useState,useEffect } from 'react';
 import axios from 'axios';
-import { BackgroundBeams } from './components/ui/background-beams';
 import { 
   Activity, 
   Server, 
   Zap, 
   Users, 
   Plus, 
-  Settings,
-  Globe,
-  Shield,
+  Settings, 
   BarChart3
 } from 'lucide-react';
 import ServerCard from './components/ServerCard';
 import MetricCard from './components/MetricCard';
 import AddServerModal from './components/AddServerModal';
-import TrafficChart from './components/TrafficChart';
 import { io } from "socket.io-client";
 
 
@@ -23,6 +19,7 @@ function App() {
   const [servers, setServers] = useState([]);
   const [algorithm, setAlgorithm] = useState("round-robin");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   // Fetch servers on load
   useEffect(() => {
@@ -30,6 +27,7 @@ function App() {
   
     socket.on("connect", () => {
       console.log("Connected to Socket.IO:", socket.id);
+      setIsConnected(true);
     });
   
     socket.on("stats", (stats) => {
@@ -53,6 +51,7 @@ function App() {
   
     socket.on("disconnect", () => {
       console.log("Disconnected from server");
+      setIsConnected(false);
     });
   
     return () => socket.disconnect();
@@ -95,69 +94,7 @@ function App() {
     setAlgorithm(alg);
     await axios.post("http://localhost:8000/algorithm", { algorithm: alg });
   };
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [algorithm, setAlgorithm] = useState('round-robin');
-  
-  // const [servers, setServers] = useState([
-  //   {
-  //     id: '1',
-  //     name: 'Web Server 1',
-  //     ip: '192.168.1.10',
-  //     port: 80,
-  //     status: 'healthy',
-  //     responseTime: 45,
-  //     connections: 156,
-  //     uptime: '99.9%'
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'Web Server 2',
-  //     ip: '192.168.1.11',
-  //     port: 80,
-  //     status: 'healthy',
-  //     responseTime: 52,
-  //     connections: 142,
-  //     uptime: '99.8%'
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'API Server',
-  //     ip: '192.168.1.20',
-  //     port: 8080,
-  //     status: 'warning',
-  //     responseTime: 180,
-  //     connections: 89,
-  //     uptime: '97.2%'
-  //   },
-  //   {
-  //     id: '4',
-  //     name: 'Database Proxy',
-  //     ip: '192.168.1.30',
-  //     port: 3306,
-  //     status: 'error',
-  //     responseTime: 0,
-  //     connections: 0,
-  //     uptime: '0%'
-  //   }
-  // ]);
-
-  // const handleAddServer = (serverData ) => {
-  //   const newServer = {
-  //     id: Date.now().toString(),
-  //     name: serverData.name,
-  //     ip: serverData.ip,
-  //     port: serverData.port,
-  //     status: 'healthy',
-  //     responseTime: Math.floor(Math.random() * 100) + 20,
-  //     connections: Math.floor(Math.random() * 200) + 50,
-  //     uptime: '100%'
-  //   };
-  //   setServers([...servers, newServer]);
-  // };
-
-  // const handleRemoveServer = (id) => {
-  //   setServers(servers.filter(server => server.id !== id));
-  // };
+   
 
   const healthyServers = servers.filter(s => s.status === 'healthy').length;
   const totalConnections = servers.reduce((sum, s) => sum + s.connections, 0);
@@ -177,15 +114,16 @@ function App() {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-l font-bold text-gray-900">RustyLB</h2>
-                <p className="text-sm text-gray-500">Infrastructure Management</p>
+                <h2 className="text-l font-bold text-gray-900">BalancerBoard</h2>
+                <p className="text-sm text-gray-500">Server Load Management</p>
               </div>
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Online
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                ${isConnected ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+                {isConnected ? "Online" : "Offline"}
               </div>
             </div>
           </div>
@@ -270,66 +208,7 @@ function App() {
               </div>
             </div>
           </div>
-
-          {/* SSL/Security Status */}
-          {/* <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-green-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Security</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">SSL Certificate</span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                  Valid
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">DDoS Protection</span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                  Active
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Rate Limiting</span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                  1000/min
-                </span>
-              </div>
-              
-              <div className="pt-2 border-t border-gray-100">
-                <div className="text-xs text-gray-500 mb-1">Certificate Expires</div>
-                <div className="text-sm font-medium text-gray-900">March 15, 2025</div>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Domain Configuration */}
-          {/* <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-4">
-              <Globe className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Domains</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm font-medium text-gray-900">api.example.com</div>
-                <div className="text-xs text-gray-500">Primary Domain</div>
-              </div>
-              
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm font-medium text-gray-900">www.example.com</div>
-                <div className="text-xs text-gray-500">Redirect to Primary</div>
-              </div>
-              
-              <button className="w-full p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium">
-                + Add Domain
-              </button>
-            </div>
-          </div> */}
+ 
           {/* Server Management */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
@@ -361,12 +240,7 @@ function App() {
           </div>
         </div> 
 
-        {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> */}
-          {/* Traffic Chart */}
-          {/* <div className="lg:col-span-1">
-            <TrafficChart />
-          </div>  
-        </div> */}
+        
       </div>
 
       <AddServerModal
