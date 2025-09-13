@@ -21,7 +21,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server,{
   cors:{
-    origin: 'https://balancerboard.vercel.app/',  
+    origin:[ "https://balancerboard.vercel.app","https://rustylb-front.onrender.com","https://rustylb-1-nteq.onrender.com", "http://localhost:5173"  ] ,
     methods: ['GET', 'POST', 'DELETE', 'PUT'],
   }
 })
