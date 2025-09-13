@@ -5,15 +5,15 @@ const http = require("http");
 const { Server } = require("socket.io");
 const lb = new LoadBalancer({
   servers: [
-    "http://localhost:8001",
-    "http://localhost:8002",
-    "http://localhost:8003"
+    "https://rustylb.onrender.com",
+    "https://rustylb-2.onrender.com",
+    "https://rustylb-3.onrender.com"
   ],
   algorithm: "random",
   weights:{
-    "http://localhost:8001":1,
-    "http://localhost:8002":2,
-    "http://localhost:8003":1
+    "https://rustylb.onrender.com":1,
+    "https://rustylb-2.onrender.com":2,
+    "https://rustylb-3.onrender.com":1
   }
 });
 
@@ -21,7 +21,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server,{
   cors:{
-    origin: 'http://localhost:5173',   
+    origin: 'https://balancerboard.vercel.app/',  
     methods: ['GET', 'POST', 'DELETE', 'PUT'],
   }
 })
